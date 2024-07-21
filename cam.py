@@ -6,7 +6,8 @@
 
 #Filename      :cam.py
 
-#Update        :2024/07/15
+#Update        :2024/07/21
+2024/07/21  Ver. α 0.03 カメラ撮影 単ファイル
 2024/07/15  Ver. α 0.02 OLED に文字、プログレスバー表示
 2024/07/06  Ver. α 0.01 SW ブッシュ で LED 点灯
 ############################################################################
@@ -59,6 +60,27 @@ def oled_square(x1,y1,x2,y2,color):
             draw.rectangle((x1,y1,x2,y2), outline="white",fill="white")
 
 
+# カメラ用拡張
+import picamera2
+import libcamera
+
+# カメラ用初期設定
+cam_no = 0
+width = 1920
+height = 1080
+flip_hor = False
+flip_ver = False
+wait_time = 0
+rec_time = 10
+
+# カメラ初期化処理
+picam2 = picamera2.Picamera2( camera_num = cam_no )
+preview_config = picam2.create_preview_configuration(main={"size":( width, height )})
+preview_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+video_config = picam2.create_video_configuration(main={"size":( width, height )})
+video_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+
+
 
 #print message at the begining ---custom function
 def print_message():
@@ -105,13 +127,17 @@ def main():
             # OLED ディスプレイ文字出力
             text = "静止画撮影！"
             oled_text(text,22)
-            time.sleep(1)
+            # カメラ起動、撮影（静止画）
+            picam2.start()
+            picam2.capture_file( 'picture.jpg' )
+            # カメラ停止
+            picam2.close()
             # LED１消灯
             LEDPIN1.off()
             # １秒待って OLED ディスプレイクリア
             time.sleep(1)
             device.clear()
-#            break
+            break
 
         # スイッチ２状態取得
         sw_ = ReadSW_2()
@@ -119,16 +145,21 @@ def main():
         if sw_ =='on':
             # LED２点灯
             LEDPIN2.on()
+            # カメラ起動、撮影（動画）
+            picam2.start()
+            encoder = picamera2.encoders.H264Encoder( bitrate=10000000 )
+            output = picamera2.outputs.FfmpegOutput( 'video.mpeg' )
+            
+            picam2.start_recording( encoder, output )
             # プログレスバー描画
             for x in range(0,127,1):
                 oled_square(0, 10, x, 21,1)
                 time.sleep(0.1)
-#            time.sleep( rec_time )
             # OLED ディスプレイクリア
             device.clear()
             # LED２消灯
             LEDPIN2.off()
-#            break
+            break
     pass
     # ループ処理ここまで
 #
