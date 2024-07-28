@@ -7,7 +7,8 @@
 #Filename      :cam.py
 
 #Update        :2024/07/28
-2024/07/21  Ver. β 0.05 カメラ撮影 複数ファイル（日時ファイル名）
+2024/07/28  Ver. 0.50   コード整理 正式バージョン公開
+2024/07/28  Ver. β 0.05 カメラ撮影 複数ファイル（日時ファイル名）
 2024/07/21  Ver. α 0.03 カメラ撮影 単ファイル
 2024/07/15  Ver. α 0.02 OLED に文字、プログレスバー表示
 2024/07/06  Ver. α 0.01 SW ブッシュ で LED 点灯
@@ -15,27 +16,26 @@
 """
 # タイマー用時刻取得拡張
 import time
-
 # ボタンスイッチ用 gpio 拡張
 from gpiozero import Button
+# LED 用拡張
+from gpiozero import LED
+# OLED ディスプレイ用拡張
+from luma.core.interface.serial import i2c
+from luma.core.render import canvas
+from luma.oled.device import ssd1306
+# カメラ用拡張
+import picamera2
+import libcamera
+import datetime
 
 # ボタンスイッチ初期設定
 SW_1 = Button(5,pull_up=False)
 SW_2 = Button(6,pull_up=False)
 
-
-# LED 用拡張
-from gpiozero import LED
-
 # LED 初期設定
 LEDPIN1 = LED(17)
 LEDPIN2 = LED(27)
-
-
-# OLED ディスプレイ用拡張
-from luma.core.interface.serial import i2c
-from luma.core.render import canvas
-from luma.oled.device import ssd1306
 
 # OLED ディスプレイ用初期設定
 # Raspberry Pi 4以降の場合、port=1を指定
@@ -60,33 +60,14 @@ def oled_square(x1,y1,x2,y2,color):
         with canvas(device) as draw:
             draw.rectangle((x1,y1,x2,y2), outline="white",fill="white")
 
-
-# カメラ用拡張
-import picamera2
-import libcamera
-import datetime
-
 # カメラ用初期設定
 cam_no = 0
 width = 1920
 height = 1080
 flip_hor = False
 flip_ver = False
-#wait_time = 0
-#rec_time = 10
-
 save_paths = "/home/pi/画像/"
 save_pathm = "/home/pi/ビデオ/"
-
-
-# カメラ初期化処理
-#picam2 = picamera2.Picamera2( camera_num = cam_no )
-#preview_config = picam2.create_preview_configuration(main={"size":( width, height )})
-#preview_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
-#video_config = picam2.create_video_configuration(main={"size":( width, height )})
-#video_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
-
-
 
 #print message at the begining ---custom function
 def print_message():
@@ -106,7 +87,6 @@ def ReadSW_1():
     else:
         sw_ = 'off'
     return sw_
-
 #read SW_PI_2's level
 def ReadSW_2():
     if SW_2.is_pressed:
@@ -151,7 +131,6 @@ def main():
             # １秒待って OLED ディスプレイクリア
             time.sleep(1)
             device.clear()
-#            break
 
         # スイッチ２状態取得
         sw_ = ReadSW_2()
@@ -185,7 +164,6 @@ def main():
             device.clear()
             # LED２消灯
             LEDPIN2.off()
-#            break
     pass
     # ループ処理ここまで
 #
