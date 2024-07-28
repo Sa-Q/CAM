@@ -6,7 +6,8 @@
 
 #Filename      :cam.py
 
-#Update        :2024/07/21
+#Update        :2024/07/28
+2024/07/21  Ver. β 0.05 カメラ撮影 複数ファイル（日時ファイル名）
 2024/07/21  Ver. α 0.03 カメラ撮影 単ファイル
 2024/07/15  Ver. α 0.02 OLED に文字、プログレスバー表示
 2024/07/06  Ver. α 0.01 SW ブッシュ で LED 点灯
@@ -63,6 +64,7 @@ def oled_square(x1,y1,x2,y2,color):
 # カメラ用拡張
 import picamera2
 import libcamera
+import datetime
 
 # カメラ用初期設定
 cam_no = 0
@@ -70,15 +72,19 @@ width = 1920
 height = 1080
 flip_hor = False
 flip_ver = False
-wait_time = 0
-rec_time = 10
+#wait_time = 0
+#rec_time = 10
+
+save_paths = "/home/pi/画像/"
+save_pathm = "/home/pi/ビデオ/"
+
 
 # カメラ初期化処理
-picam2 = picamera2.Picamera2( camera_num = cam_no )
-preview_config = picam2.create_preview_configuration(main={"size":( width, height )})
-preview_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
-video_config = picam2.create_video_configuration(main={"size":( width, height )})
-video_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+#picam2 = picamera2.Picamera2( camera_num = cam_no )
+#preview_config = picam2.create_preview_configuration(main={"size":( width, height )})
+#preview_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+#video_config = picam2.create_video_configuration(main={"size":( width, height )})
+#video_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
 
 
 
@@ -127,9 +133,17 @@ def main():
             # OLED ディスプレイ文字出力
             text = "静止画撮影！"
             oled_text(text,22)
+            # カメラ初期化
+            picam2 = picamera2.Picamera2( camera_num = cam_no )
+            preview_config = picam2.create_preview_configuration(main={"size":( width, height )})
+            preview_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+            picam2.configure(preview_config)
             # カメラ起動、撮影（静止画）
             picam2.start()
-            picam2.capture_file( 'picture.jpg' )
+            # 現在日時取得、ファイル保存パス + ファイル名生成
+            now = datetime.datetime.now()
+            save_files = save_paths + now.strftime('%Y%m%d_%H%M%S.jpg')
+            picam2.capture_file( save_files )
             # カメラ停止
             picam2.close()
             # LED１消灯
@@ -137,29 +151,41 @@ def main():
             # １秒待って OLED ディスプレイクリア
             time.sleep(1)
             device.clear()
-            break
+#            break
 
         # スイッチ２状態取得
         sw_ = ReadSW_2()
         # スイッチ２プッシュ時
         if sw_ =='on':
+            # カメラ初期化
+            picam2 = picamera2.Picamera2( camera_num = cam_no )
+            video_config = picam2.create_video_configuration(main={"size":( width, height )})
+            video_config["transform"] = libcamera.Transform( vflip = flip_ver, hflip = flip_hor )
+            picam2.configure( video_config )
             # LED２点灯
             LEDPIN2.on()
             # カメラ起動、撮影（動画）
             picam2.start()
+            now = datetime.datetime.now()
+            save_filem = save_pathm + now.strftime('%Y%m%d_%H%M%S.mpeg')
+
             encoder = picamera2.encoders.H264Encoder( bitrate=10000000 )
-            output = picamera2.outputs.FfmpegOutput( 'video.mpeg' )
+            output = picamera2.outputs.FfmpegOutput( save_filem )
             
             picam2.start_recording( encoder, output )
             # プログレスバー描画
             for x in range(0,127,1):
                 oled_square(0, 10, x, 21,1)
                 time.sleep(0.1)
+            # 動画撮影終了
+            picam2.stop_recording()
+            # カメラ停止
+            picam2.close()
             # OLED ディスプレイクリア
             device.clear()
             # LED２消灯
             LEDPIN2.off()
-            break
+#            break
     pass
     # ループ処理ここまで
 #
