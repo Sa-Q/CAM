@@ -16,13 +16,17 @@
 3. OLED ディスプレイ用 Python ライブラリをインストール
 4. OLED ディスプレイ用フォントをインストール
 
-    mkdir V_CAM
-    python -m venv --system-site-packages V_CAM
-    source V_CAM/bin/activate
-    
-    pip3 install luma.core
-    pip3 install luma.oled
-    deactivate
-    sudo apt-get install fonts-dejavu
-    sudo apt-get install fonts-ipafont
+
+mkdir V_CAM  
+python -m venv --system-site-packages V_CAM  
+
+source V_CAM/bin/activate
+
+pip3 install luma.core  
+pip3 install luma.oled
+
+deactivate
+
+sudo apt-get install fonts-dejavu  
+sudo apt-get install fonts-ipafont
 
