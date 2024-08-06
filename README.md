@@ -11,10 +11,10 @@
 
 ## 準備
 
-* Raspberry Pi 5 本体をセットアップする
-* Python venv 用ディレクトリを作成
-* OLED ディスプレイ用 Python ライブラリをインストール
-* OLED ディスプレイ用フォントをインストール
+1. Raspberry Pi 5 本体をセットアップする
+2. Python venv 用ディレクトリを作成
+3. OLED ディスプレイ用 Python ライブラリをインストール
+4. OLED ディスプレイ用フォントをインストール
 
     mkdir V_CAM
     python -m venv --system-site-packages V_CAM
